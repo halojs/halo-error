@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ValidationError = undefined;
+exports.ResourcesFailureError = exports.ResourcesExistError = exports.ValidationError = undefined;
 exports.default = error;
 
 var _koaOnerror = require('koa-onerror');
@@ -27,6 +27,12 @@ function error(options = {}) {
             if (err instanceof ValidationError) {
                 ctx.status = 422;
                 ctx.body = { message: err.name, errors: [err.message] };
+            } else if (err instanceof ResourcesExistError) {
+                ctx.status = 409;
+                ctx.body = { message: err.name, errors: [err.message] };
+            } else if (err instanceof ResourcesFailureError) {
+                ctx.status = 400;
+                ctx.body = { message: err.name, errors: [err.message] };
             } else {
                 throw err;
             }
@@ -42,4 +48,30 @@ class ValidationError extends Error {
         Error.captureStackTrace(this, this.constructor);
     }
 }
+
 exports.ValidationError = ValidationError;
+class ResourcesExistError extends Error {
+    constructor(message) {
+        super();
+        this.message = {
+            message,
+            code: 'exist'
+        };
+        this.name = 'Resources Exist';
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
+exports.ResourcesExistError = ResourcesExistError;
+class ResourcesFailureError extends Error {
+    constructor(message) {
+        super();
+        this.message = {
+            message,
+            code: 'failure'
+        };
+        this.name = 'Resources Failure';
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+exports.ResourcesFailureError = ResourcesFailureError;

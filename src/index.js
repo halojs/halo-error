@@ -15,6 +15,12 @@ export default function error (options = {}) {
             if (err instanceof ValidationError) {
                 ctx.status = 422
                 ctx.body = { message: err.name, errors: [err.message] }
+            } else if (err instanceof ResourcesExistError) {
+                ctx.status = 409
+                ctx.body = { message: err.name, errors: [err.message] }
+            } else if (err instanceof ResourcesFailureError) {
+                ctx.status = 400
+                ctx.body = { message: err.name, errors: [err.message] }
             } else {
                 throw err
             }
@@ -27,6 +33,30 @@ export class ValidationError extends Error {
         super()
         this.message = message
         this.name = 'Validation Failed'
+        Error.captureStackTrace(this, this.constructor)
+    }
+}
+
+export class ResourcesExistError extends Error {
+    constructor(message) {
+        super()
+        this.message = {
+            message,
+            code: 'exist'
+        }
+        this.name = 'Resources Exist'
+        Error.captureStackTrace(this, this.constructor)
+    }
+}
+
+export class ResourcesFailureError extends Error {
+    constructor(message) {
+        super()
+        this.message = {
+            message,
+            code: 'failure'
+        }
+        this.name = 'Resources Failure'
         Error.captureStackTrace(this, this.constructor)
     }
 }
