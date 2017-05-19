@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ResourcesFailureError = exports.ResourcesExistError = exports.ValidationError = undefined;
+exports.ResourcesFailureError = exports.ResourcesExistError = exports.NetworkError = exports.ValidationError = undefined;
 exports.default = error;
 
 var _koaOnerror = require('koa-onerror');
@@ -33,6 +33,9 @@ function error(options = {}) {
             } else if (err instanceof ResourcesFailureError) {
                 ctx.status = 400;
                 ctx.body = { message: err.name, errors: [err.message] };
+            } else if (err instanceof NetworkError) {
+                ctx.status = 502;
+                ctx.body = { message: err.name, errors: [err.message] };
             } else {
                 throw err;
             }
@@ -50,6 +53,19 @@ class ValidationError extends Error {
 }
 
 exports.ValidationError = ValidationError;
+class NetworkError extends Error {
+    constructor(message) {
+        super();
+        this.message = {
+            message,
+            code: 'network'
+        };
+        this.name = 'Network Failed';
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
+exports.NetworkError = NetworkError;
 class ResourcesExistError extends Error {
     constructor(message) {
         super();

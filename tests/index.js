@@ -3,7 +3,7 @@ import test from 'ava'
 import error from '../src'
 import request from 'request'
 import mount from 'koa-mount'
-import { ValidationError, ResourcesExistError, ResourcesFailureError } from '../src'
+import { ValidationError, ResourcesExistError, NetworkError, ResourcesFailureError } from '../src'
 
 const req = request.defaults({
     json: true,
@@ -27,6 +27,9 @@ test.before.cb((t) => {
     }))
     app.use(mount('/resources-failure', async function (ctx, next) {
         throw new ResourcesFailureError('test')
+    }))
+    app.use(mount('/network', async function (ctx, next) {
+        throw new NetworkError('test')
     }))
     app.listen(3000, t.end)
 })
@@ -59,11 +62,11 @@ test.cb('ValidationError, in middleware', (t) => {
 
 test('ResourcesExistError', (t) => {
     let err = t.throws(() => {
-        throw new ResourcesExistError('test')
-
-        t.is(err.message.message, 'test')
-        t.is(err.name, 'Resources Exist')
+        throw new ResourcesExistError('test')    
     })
+
+    t.is(err.message.message, 'test')
+    t.is(err.name, 'Resources Exist')
 })
 
 test.cb('ResourcesExistError, in middleware', (t) => {
@@ -78,10 +81,10 @@ test.cb('ResourcesExistError, in middleware', (t) => {
 test('ResourcesFailureError', (t) => {
     let err = t.throws(() => {
         throw new ResourcesFailureError('test')
-
-        t.is(err.message.message, 'test')
-        t.is(err.name, 'Resources Failure')
     })
+
+    t.is(err.message.message, 'test')
+    t.is(err.name, 'Resources Failure')
 })
 
 test.cb('ResourcesFailureError, in middleware', (t) => {
@@ -89,6 +92,24 @@ test.cb('ResourcesFailureError, in middleware', (t) => {
         t.is(res.statusCode, 400)
         t.is(body.message, 'Resources Failure')
         t.deepEqual(body.errors, [{ message: 'test', code: 'failure' }])
+        t.end()
+    })
+})
+
+test('NetworkError', (t) => {
+    let err = t.throws(() => {
+        throw new NetworkError('test')
+    })
+
+    t.is(err.message.message, 'test')
+    t.is(err.name, 'Network Failed')
+})
+
+test.cb('NetworkError, in middleware', (t) => {
+    req.get('/network', (err, res, body) => {
+        t.is(res.statusCode, 502)
+        t.is(body.message, 'Network Failed')
+        t.deepEqual(body.errors, [{ message: 'test', code: 'network' }])
         t.end()
     })
 })

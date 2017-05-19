@@ -21,6 +21,9 @@ export default function error (options = {}) {
             } else if (err instanceof ResourcesFailureError) {
                 ctx.status = 400
                 ctx.body = { message: err.name, errors: [err.message] }
+            } else if (err instanceof NetworkError) {
+                ctx.status = 502
+                ctx.body = { message: err.name, errors: [err.message] }
             } else {
                 throw err
             }
@@ -33,6 +36,18 @@ export class ValidationError extends Error {
         super()
         this.message = message
         this.name = 'Validation Failed'
+        Error.captureStackTrace(this, this.constructor)
+    }
+}
+
+export class NetworkError extends Error {
+    constructor(message) {
+        super()
+        this.message = {
+            message,
+            code: 'network'
+        }
+        this.name = 'Network Failed'
         Error.captureStackTrace(this, this.constructor)
     }
 }
