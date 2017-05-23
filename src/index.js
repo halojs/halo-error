@@ -24,6 +24,9 @@ export default function error (options = {}) {
             } else if (err instanceof NetworkError) {
                 ctx.status = 502
                 ctx.body = { message: err.name, errors: [err.message] }
+            } else if (err instanceof ValidError) {
+                ctx.status = 201
+                ctx.body = { message: err.name, errors: [err.message] }
             } else {
                 throw err
             }
@@ -72,6 +75,17 @@ export class ResourcesFailureError extends Error {
             code: 'failure'
         }
         this.name = 'Resources Failure'
+        Error.captureStackTrace(this, this.constructor)
+    }
+}
+export class ValidError extends Error {
+    constructor(message) {
+        super()
+        this.message = {
+            message: message,
+            code: 'validError'
+        }
+        this.name = 'Error is valid'
         Error.captureStackTrace(this, this.constructor)
     }
 }

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ResourcesFailureError = exports.ResourcesExistError = exports.NetworkError = exports.ValidationError = undefined;
+exports.ValidError = exports.ResourcesFailureError = exports.ResourcesExistError = exports.NetworkError = exports.ValidationError = undefined;
 exports.default = error;
 
 var _koaOnerror = require('koa-onerror');
@@ -35,6 +35,9 @@ function error(options = {}) {
                 ctx.body = { message: err.name, errors: [err.message] };
             } else if (err instanceof NetworkError) {
                 ctx.status = 502;
+                ctx.body = { message: err.name, errors: [err.message] };
+            } else if (err instanceof ValidError) {
+                ctx.status = 201;
                 ctx.body = { message: err.name, errors: [err.message] };
             } else {
                 throw err;
@@ -91,3 +94,15 @@ class ResourcesFailureError extends Error {
     }
 }
 exports.ResourcesFailureError = ResourcesFailureError;
+class ValidError extends Error {
+    constructor(message) {
+        super();
+        this.message = {
+            message: message,
+            code: 'validation'
+        };
+        this.name = 'Error is valid';
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+exports.ValidError = ValidError;
