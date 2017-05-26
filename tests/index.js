@@ -3,7 +3,7 @@ import test from 'ava'
 import error from '../src'
 import request from 'request'
 import mount from 'koa-mount'
-import { ValidationError, ResourcesExistError, NetworkError, ResourcesFailureError } from '../src'
+import { ValidationError, ResourcesExistError, NetworkError, ResourcesFailureError, ValidError } from '../src'
 
 const req = request.defaults({
     json: true,
@@ -30,6 +30,9 @@ test.before.cb((t) => {
     }))
     app.use(mount('/network', async function (ctx, next) {
         throw new NetworkError('test')
+    }))
+    app.use(mount('/valid-error', async function (ctx, next) {
+        throw new ValidError('test')
     }))
     app.listen(3000, t.end)
 })
@@ -110,6 +113,24 @@ test.cb('NetworkError, in middleware', (t) => {
         t.is(res.statusCode, 502)
         t.is(body.message, 'Network Failed')
         t.deepEqual(body.errors, [{ message: 'test', code: 'network' }])
+        t.end()
+    })
+})
+
+test('ValidError', (t) => {
+    let err = t.throws(() => {
+        throw new ValidError('test')
+    })
+
+    t.is(err.message.message, 'test')
+    t.is(err.name, 'Error is valid')
+})
+
+test.cb('ValidError, in middleware', (t) => {
+    req.get('/valid-error', (err, res, body) => {
+        t.is(res.statusCode, 201)
+        t.is(body.message, 'Error is valid')
+        t.deepEqual(body.errors, [{ message: 'test', code: 'validError' }])
         t.end()
     })
 })
