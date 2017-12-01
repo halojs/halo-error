@@ -3,7 +3,7 @@ import test from 'ava'
 import error from '../src'
 import request from 'request'
 import mount from 'koa-mount'
-import { ValidationError, ResourcesExistError, NetworkError, ResourcesFailureError, ValidError } from '../src'
+import { ValidationError, ResourcesExistError, NetworkError, ResourcesFailureError, ValidError, AuthorizeError } from '../src'
 
 const req = request.defaults({
     json: true,
@@ -31,8 +31,8 @@ test.before.cb((t) => {
     app.use(mount('/network', async function (ctx, next) {
         throw new NetworkError('test')
     }))
-    app.use(mount('/valid-error', async function (ctx, next) {
-        throw new ValidError('test')
+    app.use(mount('/auth', async function (ctx, next) {
+        throw new AuthorizeError('test')
     }))
     app.listen(3000, t.end)
 })
@@ -117,20 +117,20 @@ test.cb('NetworkError, in middleware', (t) => {
     })
 })
 
-test('ValidError', (t) => {
+test('AuthorizeError', (t) => {
     let err = t.throws(() => {
-        throw new ValidError('test')
+        throw new AuthorizeError('test')
     })
 
     t.is(err.message.message, 'test')
-    t.is(err.name, 'Error is valid')
+    t.is(err.name, 'Authorize Failed')
 })
 
-test.cb('ValidError, in middleware', (t) => {
-    req.get('/valid-error', (err, res, body) => {
-        t.is(res.statusCode, 201)
-        t.is(body.message, 'Error is valid')
-        t.deepEqual(body.errors, [{ message: 'test', code: 'validError' }])
+test.cb('AuthorizeError, in middleware', (t) => {
+    req.get('/auth', (err, res, body) => {
+        t.is(res.statusCode, 401)
+        t.is(body.message, 'Authorize Failed')
+        t.deepEqual(body.errors, [{ message: 'test', code: 'auth' }])
         t.end()
     })
 })

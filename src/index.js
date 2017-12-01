@@ -24,8 +24,8 @@ export default function error (options = {}) {
             } else if (err instanceof NetworkError) {
                 ctx.status = 502
                 ctx.body = { message: err.name, errors: [err.message] }
-            } else if (err instanceof ValidError) {
-                ctx.status = 201
+            } else if (err instanceof AuthorizeError) {
+                ctx.status = 401
                 ctx.body = { message: err.name, errors: [err.message] }
             } else {
                 throw err
@@ -78,14 +78,15 @@ export class ResourcesFailureError extends Error {
         Error.captureStackTrace(this, this.constructor)
     }
 }
-export class ValidError extends Error {
+
+export class AuthorizeError extends Error {
     constructor(message) {
         super()
         this.message = {
-            message: message,
-            code: 'validError'
+            message,
+            code: 'auth'
         }
-        this.name = 'Error is valid'
+        this.name = 'Authorize Failed'
         Error.captureStackTrace(this, this.constructor)
     }
 }

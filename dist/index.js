@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.ValidError = exports.ResourcesFailureError = exports.ResourcesExistError = exports.NetworkError = exports.ValidationError = undefined;
+exports.AuthorizeError = exports.ResourcesFailureError = exports.ResourcesExistError = exports.NetworkError = exports.ValidationError = undefined;
 exports.default = error;
 
 var _koaOnerror = require('koa-onerror');
@@ -36,8 +36,8 @@ function error(options = {}) {
             } else if (err instanceof NetworkError) {
                 ctx.status = 502;
                 ctx.body = { message: err.name, errors: [err.message] };
-            } else if (err instanceof ValidError) {
-                ctx.status = 201;
+            } else if (err instanceof AuthorizeError) {
+                ctx.status = 401;
                 ctx.body = { message: err.name, errors: [err.message] };
             } else {
                 throw err;
@@ -93,16 +93,17 @@ class ResourcesFailureError extends Error {
         Error.captureStackTrace(this, this.constructor);
     }
 }
+
 exports.ResourcesFailureError = ResourcesFailureError;
-class ValidError extends Error {
+class AuthorizeError extends Error {
     constructor(message) {
         super();
         this.message = {
-            message: message,
-            code: 'validation'
+            message,
+            code: 'auth'
         };
-        this.name = 'Error is valid';
+        this.name = 'Authorize Failed';
         Error.captureStackTrace(this, this.constructor);
     }
 }
-exports.ValidError = ValidError;
+exports.AuthorizeError = AuthorizeError;
